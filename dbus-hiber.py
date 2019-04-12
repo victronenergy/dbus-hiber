@@ -22,6 +22,8 @@ log = logging.getLogger()
 NAME = 'dbus-hiber'
 VERSION = '0.1'
 
+WAKEUP_INTERVAL = 60
+
 hiber_settings = {
     'faker': ['/Settings/Hiber/Faker', 0, 0, 1],
 }
@@ -271,7 +273,7 @@ class Hiber(object):
         return True
 
     def update_watchdog(self):
-        if time.time() - self.lastwake < 120:
+        if time.time() - self.lastwake < 2 * WAKEUP_INTERVAL:
             self.wdt.set(self.wdt.value ^ 1)
         else:
             self.reset.set(1)
@@ -339,7 +341,7 @@ def main():
     hiber = Hiber(svc, args.serial, rate, gpio_base)
     hiber.start()
 
-    gobject.timeout_add(60000, hiber.update_modem)
+    gobject.timeout_add(WAKEUP_INTERVAL * 1000, hiber.update_modem)
     gobject.timeout_add(5000, hiber.update_watchdog)
     mainloop.run()
 
