@@ -223,7 +223,7 @@ class Hiber(object):
                 if self.ready:
                     if self.cmds:
                         self.send(self.cmds.pop(0))
-                    else:
+                    elif not self.payload and not self.settings['faker']:
                         self.wakeup.set(0)
                         self.send('go_to_sleep()')
 
