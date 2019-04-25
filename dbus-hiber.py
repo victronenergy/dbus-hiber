@@ -107,16 +107,19 @@ class Hiber(object):
         log.error('%s, quitting' % msg)
         mainloop.quit()
 
+    def write(self, data):
+        try:
+            self.ser.write(data)
+        except serial.SerialException:
+            self.error('Write error')
+
     def send(self, cmd):
         self.lastcmd = cmd
         self.ready = False
 
         log.debug('> %s' % cmd)
 
-        try:
-            self.ser.write(cmd + '\r\n')
-        except serial.SerialException:
-            self.error('Write error')
+        self.write(cmd + '\r\n')
 
     def cmd(self, cmds):
         with self.lock:
