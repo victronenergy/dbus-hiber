@@ -96,6 +96,7 @@ class Hiber(object):
         self.lastcmd = None
         self.lastwake = 0
         self.nextpass = None
+        self.payload = None
         self.ready = False
         self.reset = Gpio(gpio_base + GPIO_RESET, 'out')
         self.wakeup = Gpio(gpio_base + GPIO_WAKEUP, 'out')
@@ -168,6 +169,29 @@ class Hiber(object):
             self.dbus['/NextPass'] = self.nextpass
             return True
 
+        if cmd == 'set_payload':
+            payload = self.payload
+
+            try:
+                length = int(vals[0])
+            except ValueError:
+                log.error('Payload length expected')
+                return True
+
+            if length != len(payload):
+                log.warn('Payload length mismatch')
+                payload = b'\0' * length
+
+            self.lastcmd = ':payload'
+            self.write(payload)
+
+            return True
+
+        if cmd == ':payload':
+            log.info('Payload submitted OK')
+            self.payload = None
+            return True
+
         return True
 
     def run(self):
@@ -192,6 +216,7 @@ class Hiber(object):
         ])
 
         self.set_faker()
+        self.set_payload('TEST')
 
         while True:
             with self.lock:
@@ -252,6 +277,10 @@ class Hiber(object):
     def set_faker(self):
         faker = self.settings['faker']
         self.cmd(['toggle_payload_over_debug(%d)' % faker])
+
+    def set_payload(self, payload):
+        self.payload = payload
+        self.cmd(['set_payload(%d)' % len(payload)])
 
     def setting_changed(self, setting, old, new):
         if setting == 'faker':
